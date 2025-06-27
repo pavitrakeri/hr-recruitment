@@ -2,7 +2,6 @@ import { useCandidate } from "@/hooks/useCandidate";
 import { CandidateSidebar } from "@/components/CandidateSidebar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { formatDistanceToNow } from 'date-fns';
 
 const MyApplications = () => {
   const { applications, loading, jobs } = useCandidate();
@@ -50,7 +49,11 @@ const MyApplications = () => {
                               <TableRow key={app.id}>
                                   <TableCell className="font-medium">{getJobTitle(app.job_id)}</TableCell>
                                   <TableCell>{getStatusBadge(app.status)}</TableCell>
-                                  <TableCell>{formatDistanceToNow(new Date(app.created_at), { addSuffix: true })}</TableCell>
+                                  <TableCell>
+                                    {app.created_at
+                                      ? new Date(app.created_at).toLocaleDateString()
+                                      : "N/A"}
+                                  </TableCell>
                               </TableRow>
                           )) : (
                               <TableRow>

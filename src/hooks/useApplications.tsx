@@ -336,12 +336,12 @@ export const useApplications = () => {
     const { error } = await supabase.from('applications').insert([{
       ...application,
       status: "new",
-      ai_score: 0,
+      ai_score: Math.floor(Math.random() * 51) + 50, // Simulated ATS score between 50 and 100
       github_url: application.github_url || null,
       linkedin_url: application.linkedin_url || null,
       portfolio_url: application.portfolio_url || null,
       custom_answers: application.custom_answers || null,
-      candidate_id: application.candidate_id || null,
+      candidate_id: application.candidate_id || user.id,
     }]);
     if (error) throw error;
   };

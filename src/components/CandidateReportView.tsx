@@ -496,7 +496,27 @@ export function CandidateReportView() {
               </TabsContent>
 
               <TabsContent value="audio" className="space-y-4">
-                {selectedApplication.audio_url && audioPublicUrl ? (
+                {Array.isArray(selectedApplication.audio_qas) && selectedApplication.audio_qas.length > 0 ? (
+                  <Card className="bg-white/80 shadow-xl rounded-3xl border-0">
+                    <CardHeader>
+                      <CardTitle className="text-lg">Audio Q&A Analysis</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-6">
+                        {selectedApplication.audio_qas.map((qa, idx) => (
+                          <div key={idx} className="mb-6">
+                            <div className="font-medium mb-2">{qa.question}</div>
+                            <audio controls className="w-full mb-1">
+                              <source src={getSupabaseFileUrl(qa.answer_url)} type="audio/webm" />
+                              Your browser does not support the audio element.
+                            </audio>
+                            <div className="text-xs text-gray-500 break-all">File path: {qa.answer_url}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : selectedApplication.audio_url && getSupabaseFileUrl(selectedApplication.audio_url) ? (
                   <Card className="bg-white/80 shadow-xl rounded-3xl border-0">
                     <CardHeader>
                       <CardTitle className="text-lg">Audio Analysis</CardTitle>
@@ -509,7 +529,7 @@ export function CandidateReportView() {
                         </div>
                         <div className="space-y-2">
                           <audio controls className="w-full">
-                            <source src={audioPublicUrl} type="audio/mpeg" />
+                            <source src={getSupabaseFileUrl(selectedApplication.audio_url)} type="audio/mpeg" />
                             Your browser does not support the audio element.
                           </audio>
                           <p className="text-sm text-gray-500">
@@ -545,16 +565,8 @@ export function CandidateReportView() {
                       <Headphones className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-gray-900 mb-2">No Audio Recording</h3>
                       <p className="text-gray-500">
-                        {selectedApplication.audio_url 
-                          ? "Unable to load audio file. Check if the file exists and the path is correct."
-                          : "This candidate did not submit an audio recording."
-                        }
+                        This candidate did not submit any audio Q&A recordings.
                       </p>
-                      {selectedApplication.audio_url && (
-                        <p className="text-xs text-gray-400 mt-2">
-                          Path: {selectedApplication.audio_url}
-                        </p>
-                      )}
                     </CardContent>
                   </Card>
                 )}

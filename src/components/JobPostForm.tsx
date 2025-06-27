@@ -335,149 +335,84 @@ export function JobPostForm() {
                             View
                           </Button>
                         </div>
-                        <div className="flex space-x-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleToggleStatus(job.id, job.status, job.title)}
-                          >
-                            <StatusIcon className="w-4 h-4 mr-1" />
-                            {job.status === "active" ? "Deactivate" : "Activate"}
-                          </Button>
-                          
-                          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                            <DialogTrigger asChild>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => openEditDialog(job)}
-                              >
-                                <Edit className="w-4 h-4 mr-1" />
-                                Edit
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl">
-                              <DialogHeader>
-                                <DialogTitle>Edit Job Post</DialogTitle>
-                                <DialogDescription>
-                                  Update the job posting details
-                                </DialogDescription>
-                              </DialogHeader>
-                              {editingJob && (
-                                <form onSubmit={handleEditJob} className="space-y-6">
-                                  <div className="grid md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                      <Label htmlFor="edit-title">Job Title</Label>
-                                      <Input
-                                        id="edit-title"
-                                        value={editingJob.title}
-                                        onChange={(e) => setEditingJob({...editingJob, title: e.target.value})}
-                                        required
-                                      />
-                                    </div>
-                                    <div className="space-y-2">
-                                      <Label htmlFor="edit-type">Job Type</Label>
-                                      <Select value={editingJob.type} onValueChange={(value) => setEditingJob({...editingJob, type: value})}>
-                                        <SelectTrigger>
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="full-time">Full-time</SelectItem>
-                                          <SelectItem value="part-time">Part-time</SelectItem>
-                                          <SelectItem value="contract">Contract</SelectItem>
-                                          <SelectItem value="internship">Internship</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-                                  </div>
-
-                                  <div className="grid md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                      <Label htmlFor="edit-location">Location</Label>
-                                      <Input
-                                        id="edit-location"
-                                        value={editingJob.location}
-                                        onChange={(e) => setEditingJob({...editingJob, location: e.target.value})}
-                                        required
-                                      />
-                                    </div>
-                                    <div className="space-y-2">
-                                      <Label htmlFor="edit-department">Department</Label>
-                                      <Select value={editingJob.department} onValueChange={(value) => setEditingJob({...editingJob, department: value})}>
-                                        <SelectTrigger>
-                                          <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="engineering">Engineering</SelectItem>
-                                          <SelectItem value="product">Product</SelectItem>
-                                          <SelectItem value="design">Design</SelectItem>
-                                          <SelectItem value="marketing">Marketing</SelectItem>
-                                          <SelectItem value="sales">Sales</SelectItem>
-                                          <SelectItem value="hr">Human Resources</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                    </div>
-                                  </div>
-
-                                  <div className="space-y-2">
-                                    <Label htmlFor="edit-description">Job Description</Label>
-                                    <Textarea
-                                      id="edit-description"
-                                      rows={15}
-                                      value={editingJob.description}
-                                      onChange={(e) => setEditingJob({...editingJob, description: e.target.value})}
-                                      required
-                                      className="font-mono whitespace-pre-wrap"
-                                    />
-                                  </div>
-
-                                  <div className="flex justify-end space-x-2">
-                                    <Button 
-                                      type="button" 
-                                      variant="outline" 
-                                      onClick={() => setIsEditDialogOpen(false)}
-                                    >
-                                      Cancel
-                                    </Button>
-                                    <Button type="submit">
-                                      Update Job
-                                    </Button>
-                                  </div>
-                                </form>
-                              )}
-                            </DialogContent>
-                          </Dialog>
-
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                className="text-red-600 hover:text-red-700"
-                              >
-                                <Trash2 className="w-4 h-4 mr-1" />
-                                Delete
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Delete Job Post</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  Are you sure you want to delete "{job.title}"? This action cannot be undone and will remove all associated applications.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction 
-                                  onClick={() => handleDeleteJob(job.id, job.title)}
-                                  className="bg-red-600 hover:bg-red-700"
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleToggleStatus(job.id, job.status, job.title)}
+                        >
+                          <StatusIcon className="w-4 h-4 mr-1" />
+                          {job.status === "active" ? "Deactivate" : "Activate"}
+                        </Button>
+                        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                          <DialogTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => openEditDialog(job)}
+                            >
+                              <Edit className="w-4 h-4 mr-1" />
+                              Edit
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                            <DialogHeader>
+                              <DialogTitle>Edit Job Post</DialogTitle>
+                              <DialogDescription>
+                                Update the job posting details
+                              </DialogDescription>
+                            </DialogHeader>
+                            <form onSubmit={handleEditJob} className="space-y-6">
+                              <div className="grid md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                  <Label htmlFor="edit-title">Job Title</Label>
+                                  <Input
+                                    id="edit-title"
+                                    value={editingJob?.title || ""}
+                                    onChange={(e) => setEditingJob({...editingJob, title: e.target.value})}
+                                    required
+                                  />
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="edit-type">Job Type</Label>
+                                  <Select value={editingJob?.type || ""} onValueChange={(value) => setEditingJob({...editingJob, type: value})}>
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="full-time">Full-time</SelectItem>
+                                      <SelectItem value="part-time">Part-time</SelectItem>
+                                      <SelectItem value="contract">Contract</SelectItem>
+                                      <SelectItem value="internship">Internship</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="edit-description">Job Description</Label>
+                                <Textarea
+                                  id="edit-description"
+                                  rows={15}
+                                  value={editingJob.description}
+                                  onChange={(e) => setEditingJob({...editingJob, description: e.target.value})}
+                                  required
+                                  className="font-mono whitespace-pre-wrap"
+                                />
+                              </div>
+                              <div className="flex justify-end space-x-2">
+                                <Button 
+                                  type="button" 
+                                  variant="outline" 
+                                  onClick={() => setIsEditDialogOpen(false)}
                                 >
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
+                                  Cancel
+                                </Button>
+                                <Button type="submit">
+                                  Update Job
+                                </Button>
+                              </div>
+                            </form>
+                          </DialogContent>
+                        </Dialog>
                       </div>
                     </div>
                   </CardContent>

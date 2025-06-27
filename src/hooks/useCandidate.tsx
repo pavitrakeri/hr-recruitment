@@ -100,6 +100,7 @@ interface Application {
   cover_letter?: string;
   resume_url?: string;
   audio_url?: string;
+  audio_qas?: { question: string; answer_url: string }[];
   ai_score: number;
   status: string;
   github_url?: string;
@@ -217,6 +218,7 @@ export const useCandidate = () => {
     cover_letter?: string;
     resume?: File;
     audio?: File;
+    audio_qas?: AudioQA[];
     githubUrl?: string;
     linkedinUrl?: string;
     portfolioUrl?: string;
@@ -268,7 +270,7 @@ export const useCandidate = () => {
           phone: profile?.phone || '',
           cover_letter: applicationData.cover_letter,
           resume_url: resumeUrl,
-          audio_url: audioUrl,
+          audio_qas: applicationData.audio_qas,
           github_url: applicationData.githubUrl,
           linkedin_url: applicationData.linkedinUrl,
           portfolio_url: applicationData.portfolioUrl,
@@ -293,7 +295,8 @@ export const useCandidate = () => {
       // Manually update the state for instant UI feedback
       const newApplication = { ...data, job };
       setApplications(prev => [newApplication, ...prev]);
-
+      // Fetch applications from DB to ensure up-to-date state
+      await fetchApplications();
       return { success: true, data: newApplication };
     } catch (error: any) {
       console.error('Error submitting application:', error);

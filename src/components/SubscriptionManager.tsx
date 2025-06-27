@@ -2,13 +2,16 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Crown, Star, Zap } from "lucide-react";
+import { Check, Crown, Star, Zap, CreditCard, Globe } from "lucide-react";
 import { useSubscriptions } from "@/hooks/useSubscriptions";
+import { useRazorpay } from "@/hooks/useRazorpay";
 import { useJobs } from "@/hooks/useJobs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useSearchParams } from "react-router-dom";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { formatPlanPrice } from "@/lib/currency";
 
 declare global {
   interface Window {
@@ -18,10 +21,12 @@ declare global {
 }
 
 export function SubscriptionManager() {
-  const { plans, userSubscription, loading, createSubscription, cancelSubscription, getJobLimit } = useSubscriptions();
+  const { plans, userSubscription, loading, createSubscription, cancelSubscription, getJobLimit, refetch } = useSubscriptions();
+  const { initiatePayment: initiateRazorpayPayment, loading: razorpayLoading } = useRazorpay();
   const { jobs } = useJobs();
   const { toast } = useToast();
   const [processing, setProcessing] = useState<string | null>(null);
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<'stripe' | 'razorpay'>('stripe');
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -94,42 +99,25 @@ export function SubscriptionManager() {
     }
   };
 
-  const handleRazorpayPayment = async (plan) => {
-    // 1. Create order on backend using Supabase Edge Function
-    const { data: orderData, error: orderError } = await supabase.functions.invoke('create-razorpay-order', {
-      body: {
-        amount: plan.price * 100, // Razorpay expects paise
-        currency: 'INR',
-      }
-    });
-
-    if (orderError) {
-      toast({
-        title: "Payment Error",
-        description: "Could not create a payment order. Please try again.",
-        variant: "destructive"
-      });
-      return;
+  const handlePayment = async (plan) => {
+    if (selectedPaymentMethod === 'razorpay') {
+      await handleRazorpayPayment(plan);
+    } else {
+      await handleStripeCheckout(plan);
     }
+  };
 
-    // 2. Open Razorpay checkout
-    const options = {
-      key: import.meta.env.VITE_RAZORPAY_KEY_ID, // Razorpay key_id from .env
-      amount: orderData.amount,
-      currency: orderData.currency,
-      name: 'AImploy',
-      description: `Subscribe to ${plan.name}`,
-      order_id: orderData.id,
-      handler: async function (response) {
-        // 3. On success, activate subscription in Supabase
-        await createSubscription(plan.id);
-        toast({ title: "Payment successful!", description: "Subscription upgraded." });
-      },
-      prefill: { email: user.email },
-      theme: { color: "#6366f1" }
-    };
-    const rzp = new window.Razorpay(options);
-    rzp.open();
+  const handleRazorpayPayment = async (plan) => {
+    setProcessing(plan.id);
+    try {
+      await initiateRazorpayPayment(plan, user?.email || '', async () => {
+        await refetch();
+      });
+    } catch (error) {
+      // Error handled by hook
+    } finally {
+      setProcessing(null);
+    }
   };
 
   const handleStripeCheckout = async (plan) => {
@@ -212,6 +200,59 @@ export function SubscriptionManager() {
         </CardContent>
       </Card>
 
+      {/* Payment Method Selection */}
+      <Card className="bg-white/80 shadow-xl rounded-3xl border-0">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CreditCard className="w-5 h-5" />
+            Payment Method
+          </CardTitle>
+          <CardDescription>
+            Choose your preferred payment method
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <input
+                type="radio"
+                id="stripe"
+                name="paymentMethod"
+                value="stripe"
+                checked={selectedPaymentMethod === 'stripe'}
+                onChange={(e) => setSelectedPaymentMethod(e.target.value as 'stripe' | 'razorpay')}
+                className="w-4 h-4 text-blue-600"
+              />
+              <label htmlFor="stripe" className="flex items-center gap-2 cursor-pointer">
+                <CreditCard className="w-4 h-4" />
+                <span>Stripe (International)</span>
+              </label>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="radio"
+                id="razorpay"
+                name="paymentMethod"
+                value="razorpay"
+                checked={selectedPaymentMethod === 'razorpay'}
+                onChange={(e) => setSelectedPaymentMethod(e.target.value as 'stripe' | 'razorpay')}
+                className="w-4 h-4 text-blue-600"
+              />
+              <label htmlFor="razorpay" className="flex items-center gap-2 cursor-pointer">
+                <Globe className="w-4 h-4" />
+                <span>Razorpay (India)</span>
+              </label>
+            </div>
+          </div>
+          <div className="mt-2 text-sm text-gray-600">
+            {selectedPaymentMethod === 'razorpay' 
+              ? 'Pay in INR using UPI, cards, net banking, and wallets'
+              : 'Pay in USD using international cards and payment methods'
+            }
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Subscription Plans */}
       <Card className="bg-white/80 shadow-xl rounded-3xl border-0">
         <CardHeader>
@@ -246,7 +287,7 @@ export function SubscriptionManager() {
                       </div>
                       <div className="text-right">
                         <div className="text-2xl font-bold">
-                          ${plan.price}
+                          {formatPlanPrice(plan.price, selectedPaymentMethod === 'razorpay' ? 'INR' : 'USD')}
                         </div>
                         <div className="text-sm text-gray-500">per month</div>
                       </div>
@@ -283,10 +324,10 @@ export function SubscriptionManager() {
                             isDowngrade ? 'bg-gray-600 hover:bg-gray-700' : 
                             'bg-green-600 hover:bg-green-700'
                           }`}
-                          onClick={() => handleStripeCheckout(plan)}
-                          disabled={processing === plan.id}
+                          onClick={() => handlePayment(plan)}
+                          disabled={processing === plan.id || razorpayLoading}
                         >
-                          {processing === plan.id ? 'Processing...' : 
+                          {processing === plan.id || razorpayLoading ? 'Processing...' : 
                            isUpgrade ? 'Upgrade' : 
                            isDowngrade ? 'Downgrade' : 
                            'Subscribe'}

@@ -123,232 +123,172 @@ export function JobListings() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-              {jobs.map((job) => {
-                const StatusIcon = getStatusIcon(job.status);
-                return (
-              <Card key={job.id} className="bg-white/80 shadow-xl rounded-3xl border-0">
-                <CardContent className="pt-6">
-                      <div className="space-y-4">
-                        {/* Job Header */}
-                        <div className="flex items-start justify-between">
-                          <div className="space-y-2 flex-1">
-                            <h3 className="text-xl font-semibold">{job.title}</h3>
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
-                        <span className="flex items-center">
-                          <Building2 className="w-4 h-4 mr-1" />
-                          {job.department}
-                        </span>
-                        <span className="flex items-center">
-                          <MapPin className="w-4 h-4 mr-1" />
-                          {job.location}
-                        </span>
-                        <span className="flex items-center">
-                          <Calendar className="w-4 h-4 mr-1" />
-                          {new Date(job.created_at).toLocaleDateString()}
-                        </span>
+            {jobs.map((job) => {
+              const StatusIcon = getStatusIcon(job.status);
+              return (
+                <Card key={job.id} className="bg-white/80 shadow-xl rounded-3xl border-0">
+                  <CardContent className="pt-6">
+                    <div className="space-y-4">
+                      {/* Job Header */}
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-2 flex-1">
+                          <h3 className="text-xl font-semibold">{job.title}</h3>
+                          <div className="flex items-center space-x-4 text-sm text-gray-500">
+                            <span className="flex items-center">
+                              <Building2 className="w-4 h-4 mr-1" />
+                              {job.department}
+                            </span>
+                            <span className="flex items-center">
+                              <MapPin className="w-4 h-4 mr-1" />
+                              {job.location}
+                            </span>
+                            <span className="flex items-center">
+                              <Calendar className="w-4 h-4 mr-1" />
+                              {new Date(job.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Badge variant={getStatusColor(job.status)}>
+                            {job.status}
+                          </Badge>
+                        </div>
                       </div>
-                    </div>
-                          <div className="flex items-center space-x-2">
-                            <Badge variant={getStatusColor(job.status)}>
-                        {job.status}
-                      </Badge>
+
+                      {/* Job Details */}
+                      <div className="bg-white/60 p-4 rounded-2xl">
+                        <div className="grid md:grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="font-medium text-blue-900">Job Type:</span>
+                            <span className="ml-2 text-gray-700 capitalize">{job.type}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-blue-900">Department:</span>
+                            <span className="ml-2 text-gray-700 capitalize">{job.department}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-blue-900">Location:</span>
+                            <span className="ml-2 text-gray-700">{job.location}</span>
+                          </div>
+                          <div>
+                            <span className="font-medium text-blue-900">Created:</span>
+                            <span className="ml-2 text-gray-700">
+                              {new Date(job.created_at).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })}
+                            </span>
                           </div>
                         </div>
-
-                        {/* Job Details */}
-                        <div className="bg-white/60 p-4 rounded-2xl">
-                          <div className="grid md:grid-cols-2 gap-4 text-sm">
-                            <div>
-                              <span className="font-medium text-blue-900">Job Type:</span>
-                              <span className="ml-2 text-gray-700 capitalize">{job.type}</span>
-                            </div>
-                            <div>
-                              <span className="font-medium text-blue-900">Department:</span>
-                              <span className="ml-2 text-gray-700 capitalize">{job.department}</span>
-                            </div>
-                            <div>
-                              <span className="font-medium text-blue-900">Location:</span>
-                              <span className="ml-2 text-gray-700">{job.location}</span>
-                            </div>
-                            <div>
-                              <span className="font-medium text-blue-900">Created:</span>
-                              <span className="ml-2 text-gray-700">
-                                {new Date(job.created_at).toLocaleDateString('en-US', {
-                                  year: 'numeric',
-                                  month: 'long',
-                                  day: 'numeric'
-                                })}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="mt-3">
-                            <span className="font-medium text-blue-900">Description:</span>
-                            <p className="mt-1 text-gray-700 text-sm line-clamp-3">{job.description}</p>
-                          </div>
+                        <div className="mt-3">
+                          <span className="font-medium text-blue-900">Description:</span>
+                          <p className="mt-1 text-gray-700 text-sm line-clamp-3">{job.description}</p>
                         </div>
+                      </div>
 
-                        {/* Action Buttons */}
-                        <div className="flex flex-wrap gap-2">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => copyJobLink(job.id)}
-                          >
-                            <Copy className="w-4 h-4 mr-1" />
-                            Copy Link
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => openJobLink(job.id)}
-                          >
-                            <ExternalLink className="w-4 h-4 mr-1" />
-                            View
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => handleToggleStatus(job.id, job.status, job.title)}
-                          >
-                            <StatusIcon className="w-4 h-4 mr-1" />
-                            {job.status === "active" ? "Deactivate" : "Activate"}
-                          </Button>
-                          
-                          
-                          <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-                            <DialogTrigger asChild>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => openEditDialog(job)}
-                              >
-                                <Edit className="w-4 h-4 mr-1" />
-                                Edit
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                              <DialogHeader>
-                                <DialogTitle>Edit Job Post</DialogTitle>
-                                <DialogDescription>
-                                  Update the job posting details below.
-                                </DialogDescription>
-                              </DialogHeader>
-                              <form onSubmit={handleEditJob} className="space-y-6">
-                                <div className="grid md:grid-cols-2 gap-6">
-                                  <div className="space-y-2">
-                                    <Label htmlFor="edit-title">Job Title</Label>
-                                    <Input
-                                      id="edit-title"
-                                      value={editingJob?.title || ""}
-                                      onChange={(e) => setEditingJob({...editingJob, title: e.target.value})}
-                                      required
-                                    />
-                                  </div>
-                                  <div className="space-y-2">
-                                    <Label htmlFor="edit-type">Job Type</Label>
-                                    <Select value={editingJob?.type || ""} onValueChange={(value) => setEditingJob({...editingJob, type: value})}>
-                                      <SelectTrigger>
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="full-time">Full-time</SelectItem>
-                                        <SelectItem value="part-time">Part-time</SelectItem>
-                                        <SelectItem value="contract">Contract</SelectItem>
-                                        <SelectItem value="internship">Internship</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                </div>
-
-                                <div className="grid md:grid-cols-2 gap-6">
-                                  <div className="space-y-2">
-                                    <Label htmlFor="edit-location">Location</Label>
-                                    <Input
-                                      id="edit-location"
-                                      value={editingJob?.location || ""}
-                                      onChange={(e) => setEditingJob({...editingJob, location: e.target.value})}
-                                      required
-                                    />
-                                  </div>
-                                  <div className="space-y-2">
-                                    <Label htmlFor="edit-department">Department</Label>
-                                    <Select value={editingJob?.department || ""} onValueChange={(value) => setEditingJob({...editingJob, department: value})}>
-                                      <SelectTrigger>
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="engineering">Engineering</SelectItem>
-                                        <SelectItem value="product">Product</SelectItem>
-                                        <SelectItem value="design">Design</SelectItem>
-                                        <SelectItem value="marketing">Marketing</SelectItem>
-                                        <SelectItem value="sales">Sales</SelectItem>
-                                        <SelectItem value="hr">Human Resources</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                </div>
-
+                      {/* Action Buttons */}
+                      <div className="flex flex-wrap gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => copyJobLink(job.id)}
+                        >
+                          <Copy className="w-4 h-4 mr-1" />
+                          Copy Link
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => openJobLink(job.id)}
+                        >
+                          <ExternalLink className="w-4 h-4 mr-1" />
+                          View
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleToggleStatus(job.id, job.status, job.title)}
+                        >
+                          <StatusIcon className="w-4 h-4 mr-1" />
+                          {job.status === "active" ? "Deactivate" : "Activate"}
+                        </Button>
+                        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+                          <DialogTrigger asChild>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => openEditDialog(job)}
+                            >
+                              <Edit className="w-4 h-4 mr-1" />
+                              Edit
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                            <DialogHeader>
+                              <DialogTitle>Edit Job Post</DialogTitle>
+                              <DialogDescription>
+                                Update the job posting details below.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <form onSubmit={handleEditJob} className="space-y-6">
+                              <div className="grid md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
-                                  <Label htmlFor="edit-description">Job Description</Label>
-                                  <Textarea
-                                    id="edit-description"
-                                    rows={6}
-                                    value={editingJob?.description || ""}
-                                    onChange={(e) => setEditingJob({...editingJob, description: e.target.value})}
+                                  <Label htmlFor="edit-title">Job Title</Label>
+                                  <Input
+                                    id="edit-title"
+                                    value={editingJob?.title || ""}
+                                    onChange={(e) => setEditingJob({...editingJob, title: e.target.value})}
                                     required
                                   />
-                        </div>
-
-                                  <div className="flex justify-end space-x-2">
-                                    <Button 
-                                      type="button" 
-                                      variant="outline" 
-                                      onClick={() => setIsEditDialogOpen(false)}
-                                    >
-                                      Cancel
-                                    </Button>
-                                    <Button type="submit">
-                                      Update Job
-                        </Button>
-                                  </div>
-                              </form>
-                            </DialogContent>
-                          </Dialog>
-
-                          {!isFreePlan && (
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="outline" size="sm">
-                                  <Trash2 className="w-4 h-4 mr-1" />
-                                  Delete
+                                </div>
+                                <div className="space-y-2">
+                                  <Label htmlFor="edit-type">Job Type</Label>
+                                  <Select value={editingJob?.type || ""} onValueChange={(value) => setEditingJob({...editingJob, type: value})}>
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="full-time">Full-time</SelectItem>
+                                      <SelectItem value="part-time">Part-time</SelectItem>
+                                      <SelectItem value="contract">Contract</SelectItem>
+                                      <SelectItem value="internship">Internship</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+                              <div className="space-y-2">
+                                <Label htmlFor="edit-description">Job Description</Label>
+                                <Textarea
+                                  id="edit-description"
+                                  rows={6}
+                                  value={editingJob?.description || ""}
+                                  onChange={(e) => setEditingJob({...editingJob, description: e.target.value})}
+                                  required
+                                />
+                              </div>
+                              <div className="flex justify-end space-x-2">
+                                <Button 
+                                  type="button" 
+                                  variant="outline" 
+                                  onClick={() => setIsEditDialogOpen(false)}
+                                >
+                                  Cancel
                                 </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete Job Post</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to delete "{job.title}"? This action cannot be undone.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={() => handleDeleteJob(job.id, job.title)}
-                                    className="bg-red-600 hover:bg-red-700"
-                                  >
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          )}
+                                <Button type="submit">
+                                  Update Job
+                                </Button>
+                              </div>
+                            </form>
+                          </DialogContent>
+                        </Dialog>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-                );
-              })}
-            
+                  </CardContent>
+                </Card>
+              );
+            })}
+
             {jobs.length === 0 && !loading && (
               <div className="text-center py-12">
                 <Briefcase className="w-12 h-12 text-gray-400 mx-auto mb-4" />

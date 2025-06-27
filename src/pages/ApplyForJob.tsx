@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,11 +9,17 @@ import { Upload, Mic, MicOff, Play, Square, CheckCircle, ArrowLeft } from "lucid
 import { useApplications } from "@/hooks/useApplications";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import { useCandidate } from "@/hooks/useCandidate";
 
 const ApplyForJob = () => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { jobId } = useParams();
   const { submitApplication } = useApplications();
   const { toast } = useToast();
+  const { profile: candidateProfile, loading: candidateLoading } = useCandidate();
   
   const [formData, setFormData] = useState({
     name: "",
@@ -39,6 +45,16 @@ const ApplyForJob = () => {
 
   const [phoneError, setPhoneError] = useState<string | null>(null);
 
+  // Candidate authentication check
+  useEffect(() => {
+    if (!loading) {
+      if (!user || user.user_metadata.user_type !== "candidate" || !user.email_confirmed_at) {
+        // Redirect to candidate login with redirect param
+        navigate(`/candidate?redirect=${encodeURIComponent(location.pathname)}`, { replace: true });
+      }
+    }
+  }, [user, loading, navigate, location.pathname]);
+
   useEffect(() => {
     const fetchJob = async () => {
       if (!jobId) return;
@@ -58,6 +74,18 @@ const ApplyForJob = () => {
     };
     fetchJob();
   }, [jobId]);
+
+  // Prefill form fields with candidate profile data if available
+  useEffect(() => {
+    if (candidateProfile) {
+      setFormData((prev) => ({
+        ...prev,
+        name: prev.name || candidateProfile.full_name || "",
+        email: prev.email || candidateProfile.email || "",
+        phone: prev.phone || candidateProfile.phone || "",
+      }));
+    }
+  }, [candidateProfile]);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -118,15 +146,20 @@ const ApplyForJob = () => {
     try {
       let audio_url, resume_url;
 
+      // Sanitize job title and email for folder names
+      const safeJobTitle = job?.title?.replace(/[^a-zA-Z0-9-_]/g, "_") || "job";
+      const safeEmail = formData.email.replace(/[^a-zA-Z0-9@._-]/g, "_");
+
       if (audioBlob) {
-        const audioPath = `audio/${formData.email}/${jobId}/${Date.now()}.webm`;
+        const audioPath = `${safeJobTitle}/${safeEmail}/audio.webm`;
         const { data, error } = await supabase.storage.from('applications').upload(audioPath, audioBlob);
         if (error) throw new Error(`Audio upload failed: ${error.message}`);
         audio_url = data.path;
       }
       
       if (resumeFile) {
-        const resumePath = `resumes/${formData.email}/${jobId}/${resumeFile.name}`;
+        const ext = resumeFile.name.split('.').pop();
+        const resumePath = `${safeJobTitle}/${safeEmail}/resume.${ext}`;
         const { data, error } = await supabase.storage.from('applications').upload(resumePath, resumeFile);
         if (error) throw new Error(`Resume upload failed: ${error.message}`);
         resume_url = data.path;
