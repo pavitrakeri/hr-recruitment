@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Edit, Briefcase, GraduationCap, MapPin, Building, FileText, Mic, User, Check, GitBranch, Linkedin, Link as LinkIcon, Phone } from "lucide-react";
 import { format } from 'date-fns/format';
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 
 // Import the new components
 import { ProfileSectionCard } from "@/components/profile/ProfileSectionCard";
@@ -17,7 +18,7 @@ import { SkillsModal } from "@/components/profile/SkillsModal";
 import { ProfessionalHistoryModal } from "@/components/profile/ProfessionalHistoryModal";
 
 const CandidateDashboard = () => {
-  const { profile, loading } = useCandidate();
+  const { profile, applications, loading } = useCandidate();
   const [activeTab, setActiveTab] = useState("about");
 
   // State for controlling modals
@@ -54,6 +55,13 @@ const CandidateDashboard = () => {
     setHistoryModalOpen(true);
   }
 
+  // Dashboard summary stats
+  const totalApplications = applications.length;
+  const inProgress = applications.filter(app => app.status === 'in_progress' || app.status === 'reviewing').length;
+  const interviews = applications.filter(app => app.status === 'interviewed').length;
+  const offers = applications.filter(app => app.status === 'offered' || app.status === 'hired').length;
+  const recentApplications = applications.slice(0, 3);
+
   return (
     <div className="flex-1 p-8 bg-gray-50/50">
       {/* Header */}
@@ -75,6 +83,65 @@ const CandidateDashboard = () => {
                 <Check className="w-5 h-5" /> 75%
             </div>
         </div>
+      </div>
+
+      {/* Dashboard Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Total Applications</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{totalApplications}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>In Progress</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{inProgress}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Interviews</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{interviews}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Offers</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold">{offers}</div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Activity */}
+      <div className="mb-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent Activity</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {recentApplications.length === 0 ? (
+              <div className="text-gray-500">No recent applications.</div>
+            ) : (
+              <ul className="space-y-2">
+                {recentApplications.map(app => (
+                  <li key={app.id} className="flex flex-col">
+                    <span className="font-medium">Applied to {app.job?.title || 'a job'}</span>
+                    <span className="text-xs text-gray-500">{new Date(app.created_at).toLocaleDateString()} &middot; Status: {app.status}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       {/* Main Content */}

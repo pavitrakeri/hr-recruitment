@@ -46,7 +46,7 @@ export const ResumeUploadModal = ({ isOpen, onClose }: ResumeUploadModalProps) =
     const filePath = `resumes/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
-      .from('candidate-resumes')
+      .from('candidate')
       .upload(filePath, file);
 
     if (uploadError) {
@@ -56,7 +56,7 @@ export const ResumeUploadModal = ({ isOpen, onClose }: ResumeUploadModalProps) =
     }
 
     const { data: { publicUrl } } = supabase.storage
-        .from('candidate-resumes')
+        .from('candidate')
         .getPublicUrl(filePath);
 
     const { success, error: updateError } = await updateProfile({ resume_url: publicUrl });

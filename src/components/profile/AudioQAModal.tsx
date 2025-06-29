@@ -8,9 +8,12 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 
 const questions = [
-    { id: 1, text: "Tell us about your most challenging project and how you handled it." },
-    { id: 2, text: "What are your long-term career goals?" },
-    { id: 3, text: "Describe a time you had to learn a new skill quickly." },
+    { id: 1, text: "Why are you interested in working for our company?" },
+    { id: 2, text: "Why is this particular role important to you?" },
+    { id: 3, text: "Describe a significant decision you've made recently." },
+    { id: 4, text: "Describe a project you've recently taken responsibility for." },
+    { id: 5, text: "How do you know when you've done something well?" },
+    { id: 6, text: "Tell me about a work experience you really enjoyed" },
 ];
 
 const AudioQAModal = ({ isOpen, onClose }) => {
@@ -64,13 +67,13 @@ const AudioQAModal = ({ isOpen, onClose }) => {
             const fileName = `${profile.id}-q${question.id}-${Date.now()}.webm`;
             const filePath = `audio-answers/${fileName}`;
 
-            const { error } = await supabase.storage.from('candidate-resumes').upload(filePath, audioBlob);
+            const { error } = await supabase.storage.from('candidate').upload(filePath, audioBlob);
             if (error) {
                 toast({ title: "Upload Failed", description: error.message, variant: "destructive" });
                 setIsUploading(false);
                 return;
             }
-            const { data: { publicUrl } } = supabase.storage.from('candidate-resumes').getPublicUrl(filePath);
+            const { data: { publicUrl } } = supabase.storage.from('candidate').getPublicUrl(filePath);
             
             const newAnswer = { question: question.text, answer_url: publicUrl };
             const updatedAnswers = [...audioAnswers.filter(a => a.question !== question.text), newAnswer];
@@ -78,8 +81,9 @@ const AudioQAModal = ({ isOpen, onClose }) => {
         }
 
         if (step === questions.length) {
-            // Final submission
-            const { success, error } = await updateProfile({ audio_qas: audioAnswers });
+            // Final submission: ensure all 6 answers are present
+            const answersToSave = questions.map(q => audioAnswers.find(a => a.question === q.text) || { question: q.text, answer_url: "" });
+            const { success, error } = await updateProfile({ audio_qas: answersToSave });
              if (success) {
                 toast({ title: "Audio answers saved successfully!" });
                 fetchProfile();
