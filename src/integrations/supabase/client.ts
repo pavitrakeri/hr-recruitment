@@ -15,6 +15,34 @@ export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABL
     storage: typeof window !== 'undefined' ? window.localStorage : undefined,
     autoRefreshToken: true,
     detectSessionInUrl: true,
-    flowType: 'pkce'
+    flowType: 'pkce',
+    debug: process.env.NODE_ENV === 'development',
+    onAuthStateChange: (event, session) => {
+      // Handle auth state changes globally
+      if (event === 'SIGNED_OUT') {
+        // Clear any additional storage on sign out
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('login_time');
+          sessionStorage.clear();
+        }
+      }
+    }
+  },
+  global: {
+    headers: {
+      'X-Client-Info': 'aimploy-hr-recruitment'
+    }
   }
 });
+
+// Add error handling for network issues
+if (typeof window !== 'undefined') {
+  // Handle offline/online events
+  window.addEventListener('online', () => {
+    console.log('Network connection restored');
+  });
+  
+  window.addEventListener('offline', () => {
+    console.log('Network connection lost');
+  });
+}

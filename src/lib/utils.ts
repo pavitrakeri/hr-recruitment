@@ -110,3 +110,56 @@ export const setSessionToExpireIn = (minutes: number) => {
   const timeToExpire = Date.now() - ((60 - minutes) * 60 * 1000);
   localStorage.setItem('login_time', timeToExpire.toString());
 };
+
+// Session recovery utility
+export const recoverSession = async () => {
+  if (typeof window === 'undefined') return false;
+  
+  try {
+    // Clear potentially corrupted session data
+    const corruptedKeys = Object.keys(localStorage).filter(key => 
+      key.includes('supabase') && key.includes('session')
+    );
+    
+    corruptedKeys.forEach(key => {
+      try {
+        localStorage.removeItem(key);
+      } catch (error) {
+        console.warn('Error removing corrupted session key:', key, error);
+      }
+    });
+    
+    // Clear session storage
+    sessionStorage.clear();
+    
+    // Remove login time to force fresh login
+    localStorage.removeItem('login_time');
+    
+    return true;
+  } catch (error) {
+    console.error('Error during session recovery:', error);
+    return false;
+  }
+};
+
+// Check if session is corrupted
+export const isSessionCorrupted = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  
+  try {
+    const sessionData = localStorage.getItem('aimploy-auth-token');
+    if (!sessionData) return false;
+    
+    const parsed = JSON.parse(sessionData);
+    return !parsed || !parsed.access_token || !parsed.refresh_token;
+  } catch (error) {
+    console.warn('Session data is corrupted:', error);
+    return true;
+  }
+};
+
+// Enhanced clear all auth data with session recovery
+export const clearAllAuthDataWithRecovery = async () => {
+  clearAllAuthData();
+  await recoverSession();
+};

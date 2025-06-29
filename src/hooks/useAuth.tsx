@@ -1,7 +1,7 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { clearAllAuthData, isSessionExpired } from '@/lib/utils';
+import { clearAllAuthData, isSessionExpired, isSessionCorrupted, clearAllAuthDataWithRecovery } from '@/lib/utils';
 
 interface AuthContextType {
   user: User | null;
@@ -51,21 +51,60 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return false; // Session is still valid
   };
 
-  // Force sign out function
+  // Force sign out function with error handling
   const forceSignOut = async () => {
-    await supabase.auth.signOut();
-    clearAllAuthData();
-    setSession(null);
-    setUser(null);
-    setLoading(false);
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.warn('Error during sign out:', error);
+    } finally {
+      await clearAllAuthDataWithRecovery();
+      setSession(null);
+      setUser(null);
+      setLoading(false);
+    }
+  };
+
+  // Validate session function
+  const validateSession = async (session: Session | null) => {
+    if (!session) return false;
+    
+    // Check if session data is corrupted
+    if (isSessionCorrupted()) {
+      console.warn('Session data is corrupted, clearing and returning false');
+      await clearAllAuthDataWithRecovery();
+      return false;
+    }
+    
+    try {
+      // Try to refresh the session to validate it
+      const { data, error } = await supabase.auth.refreshSession();
+      
+      if (error) {
+        console.warn('Session validation failed:', error);
+        // If it's a 404 or similar error, clear the session
+        if (error.message?.includes('404') || error.message?.includes('NOT_FOUND')) {
+          await clearAllAuthDataWithRecovery();
+        }
+        return false;
+      }
+      
+      return !!data.session;
+    } catch (error) {
+      console.warn('Session validation error:', error);
+      await clearAllAuthDataWithRecovery();
+      return false;
+    }
   };
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
 
-    // Set up auth state listener
+    // Set up auth state listener with better error handling
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change:', event, session?.user?.id);
+        
         if (event === 'SIGNED_IN') {
           localStorage.setItem('login_time', Date.now().toString());
           setSession(session);
@@ -96,15 +135,40 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           setSession(session);
           setUser(session?.user ?? null);
         }
+
+        if (event === 'USER_UPDATED') {
+          setUser(session?.user ?? null);
+        }
+
+        // Handle token refresh errors
+        if (event === 'TOKEN_REFRESH_FAILED') {
+          console.warn('Token refresh failed, signing out');
+          await forceSignOut();
+        }
       }
     );
 
-    // Get initial session and check expiry
+    // Get initial session and check expiry with better error handling
     const initializeAuth = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.warn('Error getting session:', error);
+          await forceSignOut();
+          return;
+        }
         
         if (session) {
+          // Validate the session first
+          const isValid = await validateSession(session);
+          
+          if (!isValid) {
+            console.warn('Invalid session detected, signing out');
+            await forceSignOut();
+            return;
+          }
+          
           const expired = await checkSessionExpiry(session);
           if (!expired) {
             setSession(session);
@@ -138,7 +202,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.warn('Error during sign out:', error);
+      // Even if sign out fails, clear local data
+      clearAllAuthData();
+      setSession(null);
+      setUser(null);
+    }
   };
 
   const value = {
