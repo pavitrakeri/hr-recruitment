@@ -144,29 +144,37 @@ export default function JobApplicationForm({ job, onSubmitted }) {
     try {
       let resume_url;
       const safeJobTitle = job?.title?.replace(/[^a-zA-Z0-9-_]/g, "_") || "job";
-      const safeEmail = formData.email.replace(/[^a-zA-Z0-9@._-]/g, "_");
-      // Upload all audio answers
-      const audio_qas = [];
-      for (let i = 0; i < AUDIO_QUESTIONS.length; i++) {
-        const q = audioQAs[i];
-        const audioPath = `${safeJobTitle}/${safeEmail}/audio_q${i + 1}.webm`;
-        const { data, error } = await supabase.storage.from('applications').upload(audioPath, q.audioBlob, { upsert: true });
-        if (error) throw new Error(`Audio upload failed for Q${i + 1}: ${error.message}`);
-        audio_qas.push({ question: AUDIO_QUESTIONS[i], answer_url: data.path });
-      }
+      
+      // Upload resume
       if (resumeFile) {
         const ext = resumeFile.name.split('.').pop();
-        const resumePath = `${safeJobTitle}/${safeEmail}/resume.${ext}`;
+        const resumePath = `${job.id}/${safeJobTitle}/resume.${ext}`;
         const { data, error } = await supabase.storage.from('applications').upload(resumePath, resumeFile, { upsert: true });
         if (error) throw new Error(`Resume upload failed: ${error.message}`);
         resume_url = data.path;
       }
+
+      // Upload all audio answers
+      const audio_qas = [];
+      for (let i = 0; i < AUDIO_QUESTIONS.length; i++) {
+        const q = audioQAs[i];
+        if (q.audioBlob) {
+          const audioPath = `${job.id}/${safeJobTitle}/audio_q${i + 1}.webm`;
+          const { data, error } = await supabase.storage.from('applications').upload(audioPath, q.audioBlob, { upsert: true });
+          if (error) throw new Error(`Audio upload failed for Q${i + 1}: ${error.message}`);
+          audio_qas.push({ question: AUDIO_QUESTIONS[i], answer_url: data.path });
+        }
+      }
+      
       await submitApplication({ job_id: job.id, ...formData, resume_url, audio_qas } as any);
-      await supabase.auth.admin.inviteUserByEmail(formData.email, {
-        data: { created_from_application: true }
+      
+      toast({
+        title: "Application Submitted!",
+        description: "Your application has been successfully submitted.",
       });
+
       if (onSubmitted) onSubmitted();
-    } catch (error) {
+    } catch (error: any) {
       toast({ title: "Submission Failed", description: error.message || "An unknown error occurred.", variant: "destructive" });
     } finally {
       setIsSubmitting(false);

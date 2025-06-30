@@ -54,14 +54,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // Force sign out function with error handling
   const forceSignOut = async () => {
     try {
-      await supabase.auth.signOut();
+    await supabase.auth.signOut();
     } catch (error) {
       console.warn('Error during sign out:', error);
     } finally {
       await clearAllAuthDataWithRecovery();
-      setSession(null);
-      setUser(null);
-      setLoading(false);
+    setSession(null);
+    setUser(null);
+    setLoading(false);
     }
   };
 
@@ -203,7 +203,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const signOut = async () => {
     try {
-      await supabase.auth.signOut();
+    await supabase.auth.signOut();
     } catch (error) {
       console.warn('Error during sign out:', error);
       // Even if sign out fails, clear local data

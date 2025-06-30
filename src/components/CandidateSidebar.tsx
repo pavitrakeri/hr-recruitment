@@ -67,7 +67,7 @@ export const CandidateSidebar = ({ open, setOpen }: { open?: boolean, setOpen?: 
         <nav className="flex-1 p-4 space-y-2 mt-4">
           <NavLink to="/candidate" icon={LayoutDashboard} currentPath={location.pathname}>Dashboard</NavLink>
           <NavLink to="/candidate/applications" icon={FileText} currentPath={location.pathname}>My Applications</NavLink>
-          <NavLink to="/candidate/submit" icon={Send} currentPath={location.pathname}>Submit & Track</NavLink>
+          <NavLink to="/candidate/submit-track" icon={Send} currentPath={location.pathname}>Submit & Track</NavLink>
           <NavLink to="/candidate/settings" icon={Settings} currentPath={location.pathname}>Settings</NavLink>
         </nav>
         <div className="p-4 border-t border-gray-700/50">
